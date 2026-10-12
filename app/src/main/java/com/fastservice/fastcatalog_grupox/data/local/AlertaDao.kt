@@ -1,8 +1,9 @@
 package com.fastservice.fastcatalog_grupox.data.local
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
+
+import androidx.room3.Dao
+import androidx.room3.Insert
+import androidx.room3.Query
 
 @Dao
 interface AlertaDao {
