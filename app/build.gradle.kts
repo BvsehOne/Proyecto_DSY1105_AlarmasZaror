@@ -39,14 +39,21 @@ android {
     }
 }
 
+configurations.all {
+    exclude(group = "com.intellij", module = "annotations")
+}
+
 dependencies {
     // AndroidX básico
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.room3.common)
-    implementation(libs.androidx.room3.compiler)
     implementation(libs.material)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("com.google.android.gms:play-services-location:21.1.0")
+    
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
     
     // Compose y Activity
     implementation("androidx.activity:activity-compose:1.8.2")
