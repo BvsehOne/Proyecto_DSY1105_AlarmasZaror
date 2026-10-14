@@ -67,4 +67,13 @@ class AlertaViewModel : ViewModel() {
         repositorio.agregarAlerta(nuevaAlerta)
         _alertas.value = repositorio.obtenerAlertas()
     }
+
+    fun marcarAlertaComoResuelta(id: Int) {
+        // 1. Modifica la alerta dentro del repositorio
+        repositorio.actualizarEstadoAlerta(id, "RESUELTA")
+
+        // 2. Notifica a la interfaz con la lista actualizada
+        _alertas.value = repositorio.obtenerAlertas()
+    }
+
 }
