@@ -11,14 +11,29 @@ import androidx.compose.ui.Modifier
 import com.fastservice.fastcatalog_grupox.ui.screens.PantallaPrincipalZaror
 import com.fastservice.fastcatalog_grupox.ui.theme.FastCatalog_GrupoXTheme
 import com.fastservice.fastcatalog_grupox.viewmodel.AlertaViewModel
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import android.util.Log
 
 // MainActivity creada por Angelo Olivares - Proyecto Alarmas Zaror
 class MainActivity : ComponentActivity() {
 
     private val viewModel: AlertaViewModel by viewModels()
+    private val client = HttpClient(CIO)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // LOG DE PRUEBA INMEDIATO
+        android.util.Log.d("API_TEST", ">>> LA APLICACIÓN SE ABRIÓ CORRECTAMENTE <<<")
+
+        // Llamamos a la API al iniciar la actividad
+        probarApi()
+
         setContent {
             FastCatalog_GrupoXTheme {
                 Surface(
@@ -31,25 +46,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Cliente de Ktor
-    private val client = HttpClient(CIO)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        // Llamamos a la API
-        probarApi()
-    }
-
     private fun probarApi() {
+        Log.d("API_TEST", "Intentando conectar a la API...")
         GlobalScope.launch {
             try {
-                // IMPORTANTE: Usar 10.0.2.2 para que el emulador llegue a tu PC
-                val respuesta: HttpResponse = client.get("http://10.0.2.2:8080/api/hola")
+                val respuesta: HttpResponse = client.get("http://ip:8080/api/hola")
                 val textoRespuesta = respuesta.bodyAsText()
-
-                // Muestra el resultado en el Logcat de Android Studio
                 Log.d("API_TEST", "Respuesta de la API: $textoRespuesta")
             } catch (e: Exception) {
                 Log.e("API_TEST", "Error conectando a la API", e)
