@@ -2,11 +2,15 @@ package com.fastservice.fastcatalog_grupox.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Aquí el profe pide que definamos los colores para el diseño (Theme)
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Paleta de Colores Moderna Material Design 3 - Proyecto Alarmas Zaror
+val NavyPrimary = Color(0xFF1A237E)
+val NavyLight = Color(0xFF534BAE)
+val TealAccent = Color(0xFF00897B)
+val CrimsonRed = Color(0xFFD32F2F)
+val CrimsonLight = Color(0xFFFFEBEE)
+val AmberWarning = Color(0xFFF57C00)
+val GreenSuccess = Color(0xFF2E7D32)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val DarkSurface = Color(0xFF121212)
+val LightSurface = Color(0xFFF8F9FA)
+val CardBorderColor = Color(0xFFE0E0E0)
