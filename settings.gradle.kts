@@ -24,5 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "FastCatalog_GrupoX"
 include(":app")
-
-include(":app", ":server")

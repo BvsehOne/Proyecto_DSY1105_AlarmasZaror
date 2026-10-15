@@ -47,13 +47,4 @@ class RepositorioAlarma {
     }
 
     fun obtenerFallas(): List<FallaSistema> = listaFallas.toList()
-
-    fun actualizarEstadoAlerta(id: Int, nuevoEstado: String) {
-        val index = listaAlertas.indexOfFirst { it.id == id }
-        if (index != -1) {
-            listaAlertas[index] = listaAlertas[index].copy(estado = nuevoEstado)
-        }
-    }
-
-
 }
