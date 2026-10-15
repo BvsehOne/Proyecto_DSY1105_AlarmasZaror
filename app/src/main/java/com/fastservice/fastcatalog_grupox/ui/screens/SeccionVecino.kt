@@ -52,6 +52,7 @@ import androidx.core.content.ContextCompat
 import com.fastservice.fastcatalog_grupox.modelo.Alerta
 import com.fastservice.fastcatalog_grupox.ui.componse.VisorMapaZaror
 import com.fastservice.fastcatalog_grupox.ui.componse.TarjetaAlerta
+import com.fastservice.fastcatalog_grupox.ui.componse.obtenerUbicacionReal
 import com.fastservice.fastcatalog_grupox.viewmodel.AlertaViewModel
 
 // Pantalla principal del vecino para activar la alarma
@@ -92,13 +93,15 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            latitudGps = -33.5042
-            longitudGps = -70.7185
-            ubicacionTexto = "Los Jazmines #425 (GPS: -33.5042, -70.7185)"
-            errorUbicacion = false
-            Toast.makeText(context, "Ubicacion GPS obtenida", Toast.LENGTH_SHORT).show()
+            obtenerUbicacionReal(context) { lat, lng ->
+                latitudGps = lat
+                longitudGps = lng
+                ubicacionTexto = "Ubicación GPS (${String.format("%.4f", lat)}, ${String.format("%.4f", lng)})"
+                errorUbicacion = false
+                Toast.makeText(context, "Ubicación GPS obtenida", Toast.LENGTH_SHORT).show()
+            }
         } else {
-            Toast.makeText(context, "Permiso de GPS no aceptado", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Permiso de GPS rechazado", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -209,11 +212,13 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                         OutlinedButton(
                             onClick = {
                                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                                    latitudGps = -33.5042
-                                    longitudGps = -70.7185
-                                    ubicacionTexto = "Los Jazmines #425 (GPS: -33.5042, -70.7185)"
-                                    errorUbicacion = false
-                                    Toast.makeText(context, "GPS obtenido", Toast.LENGTH_SHORT).show()
+                                    obtenerUbicacionReal(context) { lat, lng ->
+                                        latitudGps = lat
+                                        longitudGps = lng
+                                        ubicacionTexto = "Ubicación GPS (${String.format("%.4f", lat)}, ${String.format("%.4f", lng)})"
+                                        errorUbicacion = false
+                                        Toast.makeText(context, "Ubicación obtenida en tiempo real", Toast.LENGTH_SHORT).show()
+                                    }
                                 } else {
                                     launcherPermisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                                 }

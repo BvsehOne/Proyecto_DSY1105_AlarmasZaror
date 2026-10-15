@@ -49,16 +49,15 @@ class AlertaViewModel : ViewModel() {
         latitud: Double? = null,
         longitud: Double? = null
     ) {
-        val formatoHora = SimpleDateFormat("HH:mm - dd/MM", Locale.getDefault())
-        val horaActual = formatoHora.format(Date())
+        val estadoInicial = if (tipo == "Medica") "EN ATENCION" else "ACTIVA"
 
         val nuevaAlerta = Alerta(
-            id = (System.currentTimeMillis() % 10000).toInt(),
+            id = System.currentTimeMillis().toInt(),
             tipo = tipo,
-            fechaHora = horaActual,
-            ubicacion = ubicacion.ifBlank { "Los Jazmines #425 (Sector Zaror)" },
-            descripcion = descripcion.ifBlank { "Alarma activada desde la App" },
-            estado = "ACTIVA",
+            fechaHora = "Hace un momento",
+            ubicacion = ubicacion,
+            descripcion = descripcion.ifBlank { "Sin detalle adicional" },
+            estado = estadoInicial,
             fotoBitmap = fotoBitmap,
             latitud = latitud,
             longitud = longitud
@@ -69,11 +68,11 @@ class AlertaViewModel : ViewModel() {
     }
 
     fun marcarAlertaComoResuelta(id: Int) {
-        // 1. Modifica la alerta dentro del repositorio
         repositorio.actualizarEstadoAlerta(id, "RESUELTA")
 
-        // 2. Notifica a la interfaz con la lista actualizada
         _alertas.value = repositorio.obtenerAlertas()
     }
+
+
 
 }

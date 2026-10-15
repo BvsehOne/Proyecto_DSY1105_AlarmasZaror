@@ -29,7 +29,6 @@ import com.fastservice.fastcatalog_grupox.ui.componse.TarjetaAlerta
 @Composable
 fun SeccionDirectiva(
     alertas: List<Alerta>,
-    // Agregamos esta función para comunicar la acción al ViewModel
     onResolverAlerta: (Alerta) -> Unit
 ) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -75,12 +74,11 @@ fun SeccionDirectiva(
             Column {
                 TarjetaAlerta(alerta = alerta)
 
-                // Mostrar botón de resolver SOLO si la alerta está activa
-                if (alerta.estado == "ACTIVA") {
+                if (alerta.estado != "RESUELTA") {
                     OutlinedButton(
                         onClick = { onResolverAlerta(alerta) },
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFF4CAF50) // Color verde para indicar solución
+                            contentColor = Color(0xFF4CAF50)
                         ),
                         modifier = Modifier
                             .align(Alignment.End)

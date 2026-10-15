@@ -85,4 +85,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:2.3.7") // Motor HTTP para cliente
     implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+
+    //Obtener Ubicacion GPS
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 }
