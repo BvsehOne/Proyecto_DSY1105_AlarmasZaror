@@ -1,4 +1,4 @@
-# 🚨 App de Gestión de Alarmas Comunitarias - Población Zaror
+#  App de Gestión de Alarmas Comunitarias - Población Zaror
 **Asignatura:** DSY1105 - Desarrollo de Aplicaciones Móviles (Duoc UC)  
 **Evaluación:** Evaluación Parcial 2 - Encargo  
 **Integrantes:**
@@ -9,12 +9,12 @@
 
 ---
 
-## 📌 Descripción del Proyecto
+##  Descripción del Proyecto
 Aplicación móvil desarrollada en **Android (Kotlin)** con **Jetpack Compose** y **Material Design 3** para fortalecer la seguridad de la Junta de Vecinos de la **Población Zaror (Cerrillos)** (12 cuadras, 425 viviendas). La solución permite la activación rápida de alarmas comunitarias, geolocalización GPS, evidencia fotográfica, visor de mapa del sector y monitoreo por parte de la directiva y encargados de mantenimiento.
 
 ---
 
-## 🚀 Requisitos y Funcionalidades Implementadas (Rúbrica 100%)
+##  Requisitos y Funcionalidades Implementadas (Rúbrica 100%)
 
 ### 1. Interfaz Móvil y Navegación Coherente (IE 2.1.1)
 - Diseño moderno con componentes Material 3 (`ElevatedCard`, `FilterChip`, `TopAppBar`).
@@ -47,7 +47,7 @@ Aplicación móvil desarrollada en **Android (Kotlin)** con **Jetpack Compose** 
 
 ---
 
-## 🛠️ Instrucciones para Compilar y Ejecutar
+## Instrucciones para Compilar y Ejecutar
 
 1. Clonar el repositorio:
    ```bash
