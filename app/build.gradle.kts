@@ -54,6 +54,15 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
+
+    // Retrofit & Gson (Unidad 3 - Consumo API REST)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // Google Maps Compose (Mapas reales)
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:maps-compose:4.3.0")
     
     // Compose y Activity
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -71,6 +80,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.01"))

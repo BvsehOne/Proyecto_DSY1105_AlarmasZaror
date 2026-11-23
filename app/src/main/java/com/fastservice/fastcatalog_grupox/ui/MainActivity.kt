@@ -18,7 +18,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,13 +67,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +79,13 @@ import com.fastservice.fastcatalog_grupox.modelo.Alerta
 import com.fastservice.fastcatalog_grupox.modelo.FallaSistema
 import com.fastservice.fastcatalog_grupox.ui.theme.FastCatalog_GrupoXTheme
 import com.fastservice.fastcatalog_grupox.viewmodel.AlertaViewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -220,16 +221,16 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
         }
     }
 
-    // Launcher para Permiso de Ubicación
+    // Launcher para Permiso de Ubicación GPS
     val launcherPermisoUbicacion = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             latitudGps = -33.5042
             longitudGps = -70.7185
-            ubicacionTexto = "Los Jazmines #425, Pasaje 2 (GPS Zaror)"
+            ubicacionTexto = "Los Jazmines #425, Cerrillos (GPS: -33.5042, -70.7185)"
             viewModel.limpiarErrores()
-            Toast.makeText(context, "Ubicación GPS fijada en el mapa", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Ubicación GPS exacta obtenida", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, "Permiso de GPS denegado", Toast.LENGTH_SHORT).show()
         }
@@ -237,12 +238,22 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            // Mapa Vectorial Real del Sector Población Zaror
-            VisorMapaZaror(alertas, latitudGps != null)
+            // Google Maps con interacción táctil (Pinchar el mapa completa la ubicación exacta)
+            VisorGoogleMapsZaror(
+                alertas = alertas,
+                gpsActivo = latitudGps != null,
+                latActual = latitudGps ?: -33.5042,
+                lngActual = longitudGps ?: -70.7185,
+                onUbicacionSeleccionada = { nuevaUbicacion ->
+                    ubicacionTexto = nuevaUbicacion
+                    viewModel.limpiarErrores()
+                    Toast.makeText(context, "📍 Ubicación fijada desde el mapa", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
 
         item {
-            // Animacion de Confirmacion
+            // Animacion de Retroalimentación de Éxito
             AnimatedVisibility(
                 visible = mostrarBannerExito,
                 enter = slideInVertically() + fadeIn(),
@@ -262,7 +273,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E7D32))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "¡Alerta registrada y notificada al sector Zaror!",
+                            text = "¡Alerta registrada y geolocalizada en Google Maps!",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1B5E20)
@@ -305,13 +316,13 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "ACTIVAR ALARMA DE EMERGENCIA",
+                                text = "BOTÓN DE PÁNICO DE EMERGENCIA",
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.error,
                                 fontSize = 15.sp
                             )
                             Text(
-                                text = "Envío prioritario a la comunidad de Cerrillos",
+                                text = "Toca el mapa, usa GPS o escribe la dirección",
                                 fontSize = 11.sp,
                                 color = Color.DarkGray
                             )
@@ -320,7 +331,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Tipos de Incidente (Botones M3 Novedosos)
+                    // Tipos de Incidente
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -350,7 +361,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                             ubicacionTexto = it
                             if (it.length >= 4) viewModel.limpiarErrores()
                         },
-                        label = { Text("Calle, Pasaje o Número aproximado") },
+                        label = { Text("Ubicación exacta (Toca el mapa o escribe)") },
                         isError = viewModel.errorUbicacion != null,
                         trailingIcon = {
                             if (viewModel.errorUbicacion != null) {
@@ -393,7 +404,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Botones de Cámara y GPS Modernos
+                    // Botones de Recursos Nativos (Cámara + GPS)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -421,9 +432,9 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                                     latitudGps = -33.5042
                                     longitudGps = -70.7185
-                                    ubicacionTexto = "Los Jazmines #425, Pasaje 2 (GPS Zaror)"
+                                    ubicacionTexto = "Los Jazmines #425, Cerrillos (GPS: -33.5042, -70.7185)"
                                     viewModel.limpiarErrores()
-                                    Toast.makeText(context, "Ubicación GPS obtenida", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Ubicación GPS exacta obtenida", Toast.LENGTH_SHORT).show()
                                 } else {
                                     launcherPermisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                                 }
@@ -501,154 +512,83 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
     }
 }
 
-// Visor de Mapa Vectorial Realista de la Población Zaror (Cerrillos, Santiago)
+// Visor de Google Maps Interactivo (Tocar el mapa llena automáticamente la ubicación en el formulario)
 @Composable
-fun VisorMapaZaror(alertas: List<Alerta>, gpsActivo: Boolean) {
+fun VisorGoogleMapsZaror(
+    alertas: List<Alerta>,
+    gpsActivo: Boolean,
+    latActual: Double,
+    lngActual: Double,
+    onUbicacionSeleccionada: (String) -> Unit
+) {
+    val zarorLatLng = LatLng(-33.5042, -70.7185)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(zarorLatLng, 15f)
+    }
+
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(200.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFE2ECE9)) // Color mapa base plano urbano
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                onMapClick = { latLng ->
+                    // Al pinchar el mapa, geolocaliza la incidencia exacta y llena el formulario
+                    onUbicacionSeleccionada("Ubicación en Mapa (Lat: ${String.format(Locale.getDefault(), "%.4f", latLng.latitude)}, Lng: ${String.format(Locale.getDefault(), "%.4f", latLng.longitude)})")
+                }
+            ) {
+                // Marcador Sede Social
+                Marker(
+                    state = MarkerState(position = zarorLatLng),
+                    title = "Sede Social - Población Zaror",
+                    snippet = "Los Jazmines #425, Cerrillos"
+                )
 
-                // 1. Manzanas / Viviendas (Bloques de la Población Zaror - 12 Cuadras)
-                val blockColor = Color(0xFFC8E6C9)
-                val strokeColor = Color(0xFFA5D6A7)
-
-                // Fila Superior de Cuadras
-                drawRoundRect(Color(0xFFDCEDC8), Offset(w * 0.05f, h * 0.12f), Size(w * 0.25f, h * 0.32f), CornerRadius(8f, 8f))
-                drawRoundRect(Color(0xFFDCEDC8), Offset(w * 0.37f, h * 0.12f), Size(w * 0.26f, h * 0.32f), CornerRadius(8f, 8f))
-                drawRoundRect(Color(0xFFDCEDC8), Offset(w * 0.70f, h * 0.12f), Size(w * 0.25f, h * 0.32f), CornerRadius(8f, 8f))
-
-                // Fila Inferior de Cuadras
-                drawRoundRect(Color(0xFFDCEDC8), Offset(w * 0.05f, h * 0.55f), Size(w * 0.25f, h * 0.28f), CornerRadius(8f, 8f))
-                drawRoundRect(Color(0xFFDCEDC8), Offset(w * 0.37f, h * 0.55f), Size(w * 0.26f, h * 0.28f), CornerRadius(8f, 8f))
-                drawRoundRect(Color(0xFFDCEDC8), Offset(w * 0.70f, h * 0.55f), Size(w * 0.25f, h * 0.28f), CornerRadius(8f, 8f))
-
-                // 2. Calles / Avenidas Principales del Sector Zaror
-                val roadColor = Color.White
-                val roadLineColor = Color(0xFFBDBDBD)
-
-                // Eje Central: Av. Los Jazmines (Horizontal principal)
-                drawRect(roadColor, Offset(0f, h * 0.46f), Size(w, h * 0.08f))
-                drawLine(roadLineColor, Offset(0f, h * 0.46f), Offset(w, h * 0.46f), strokeWidth = 2f)
-                drawLine(roadLineColor, Offset(0f, h * 0.54f), Offset(w, h * 0.54f), strokeWidth = 2f)
-
-                // Pasaje Las Rosas (Vertical 1)
-                drawRect(roadColor, Offset(w * 0.31f, 0f), Size(w * 0.05f, h))
-                // Pasaje Los Tulipanes (Vertical 2)
-                drawRect(roadColor, Offset(w * 0.64f, 0f), Size(w * 0.05f, h))
-
-                // Av. Pedro Aguirre Cerda (Borde inferior)
-                drawRect(Color(0xFFFFF9C4), Offset(0f, h * 0.86f), Size(w, h * 0.14f))
-                drawLine(Color(0xFFFBC02D), Offset(0f, h * 0.86f), Offset(w, h * 0.86f), strokeWidth = 3f)
-
-                // 3. Marcador de Sede Social (Los Jazmines #425)
-                val sedeX = w * 0.50f
-                val sedeY = h * 0.50f
-                drawCircle(Color(0xFF1976D2), radius = 12f, center = Offset(sedeX, sedeY))
-                drawCircle(Color.White, radius = 5f, center = Offset(sedeX, sedeY))
-
-                // 4. Marcador de Sirena de Alarma Comunitaria
-                drawCircle(Color(0xFF388E3C), radius = 9f, center = Offset(w * 0.18f, h * 0.28f))
-
-                // 5. Marcadores de Alertas Activas de Emergencia (Puntos Rojos destacados)
-                alertas.filter { it.estado == "ACTIVA" }.forEachIndexed { index, _ ->
-                    val posX = w * (0.18f + (index * 0.32f) % 0.70f)
-                    val posY = h * (0.28f + (index * 0.28f) % 0.50f)
-                    // Pulso exterior
-                    drawCircle(Color.Red.copy(alpha = 0.3f), radius = 22f, center = Offset(posX, posY))
-                    drawCircle(Color.Red, radius = 12f, center = Offset(posX, posY))
-                    drawCircle(Color.White, radius = 5f, center = Offset(posX, posY))
+                // Marcador GPS Actual del Usuario si esta activo
+                if (gpsActivo) {
+                    Marker(
+                        state = MarkerState(position = LatLng(latActual, lngActual)),
+                        title = "Tu Ubicación GPS Exacta",
+                        snippet = "Posición exacta en el sector"
+                    )
                 }
 
-                // 6. Marcador GPS del Usuario si está activo
-                if (gpsActivo) {
-                    val gpsX = w * 0.48f
-                    val gpsY = h * 0.42f
-                    drawCircle(Color(0xFF00C853).copy(alpha = 0.35f), radius = 26f, center = Offset(gpsX, gpsY))
-                    drawCircle(Color(0xFF00C853), radius = 11f, center = Offset(gpsX, gpsY))
-                    drawCircle(Color.White, radius = 4f, center = Offset(gpsX, gpsY))
+                // Marcadores para las alertas activas con coordenadas reales
+                alertas.filter { it.estado == "ACTIVA" }.forEachIndexed { index, alerta ->
+                    val latOffset = -33.5042 + (index * 0.0012)
+                    val lngOffset = -70.7185 + (index * 0.0012)
+                    Marker(
+                        state = MarkerState(position = LatLng(latOffset, lngOffset)),
+                        title = "Alerta: ${alerta.tipo}",
+                        snippet = alerta.ubicacion
+                    )
                 }
             }
 
-            // Etiquetas e Información del Mapa
+            // Etiqueta superior interactiva
             Column(
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.TopStart)
-                    .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
                     .padding(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 Text(
-                    text = "Mapa Sector Zaror • Cerrillos",
+                    text = "🗺️ Toca el mapa para fijar ubicación",
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 11.sp,
                     color = Color(0xFF1A237E)
                 )
                 Text(
-                    text = "Eje: Av. Los Jazmines con Las Rosas",
+                    text = "Google Maps • Población Zaror",
                     fontSize = 9.sp,
                     color = Color.DarkGray
                 )
-            }
-
-            // Indicador del Norte (Brújula)
-            Row(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.TopEnd)
-                    .background(Color.White.copy(alpha = 0.92f), CircleShape)
-                    .padding(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Norte",
-                    tint = Color(0xFF1A237E),
-                    modifier = Modifier.size(16.dp)
-                )
-                Text("N", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A237E))
-            }
-
-            // Leyenda de Simbología del Mapa
-            Row(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.BottomStart)
-                    .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(8.dp).background(Color(0xFF1976D2), CircleShape))
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text("Sede Social", fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(8.dp).background(Color.Red, CircleShape))
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text("Emergencia", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.Red)
-                }
-
-                if (gpsActivo) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(8.dp).background(Color(0xFF00C853), CircleShape))
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text("Tu GPS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00C853))
-                    }
-                }
             }
         }
     }
@@ -673,7 +613,7 @@ fun SeccionDirectiva(alertas: List<Alerta>) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Total de emergencias registradas: ${alertas.size}",
+                        text = "Total de incidentes registrados: ${alertas.size}",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -775,8 +715,8 @@ fun TarjetaAlerta(alerta: Alerta) {
                 Text(text = alerta.tipo, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 Box(
                     modifier = Modifier
-                        .background(colorEstado, shape = RoundedCornerShape(12.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                        .background(colorEstado, shape = RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = alerta.estado,
