@@ -30,7 +30,7 @@ class AlertaViewModel : ViewModel() {
     private val _rolSeleccionado = MutableLiveData("Vecino/a")
     val rolSeleccionado: LiveData<String> get() = _rolSeleccionado
 
-    // Estados de Validacion de Formulario desacoplados de la UI (Cumplimiento IE 2.2.1)
+    // Estados de Validacion de Formulario desacoplados de la UI
     var errorUbicacion by mutableStateOf<String?>(null)
         private set
 
@@ -51,6 +51,15 @@ class AlertaViewModel : ViewModel() {
 
     fun cambiarRol(nuevoRol: String) {
         _rolSeleccionado.value = nuevoRol
+    }
+
+    // Cambiar estado de una alerta (ej: ACTIVA -> EN PROCESO -> RESUELTA)
+    fun cambiarEstadoAlerta(id: Int, nuevoEstado: String) {
+        val listaActual = _alertas.value ?: emptyList()
+        val listaModificada = listaActual.map { alerta ->
+            if (alerta.id == id) alerta.copy(estado = nuevoEstado) else alerta
+        }
+        _alertas.value = listaModificada
     }
 
     // Validacion desacoplada de la UI

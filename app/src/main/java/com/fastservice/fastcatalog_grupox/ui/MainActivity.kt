@@ -60,6 +60,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -88,6 +89,12 @@ import com.fastservice.fastcatalog_grupox.modelo.FallaSistema
 import com.fastservice.fastcatalog_grupox.ui.theme.FastCatalog_GrupoXTheme
 import com.fastservice.fastcatalog_grupox.viewmodel.AlertaViewModel
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -188,7 +195,7 @@ fun PantallaPrincipalZaror(viewModel: AlertaViewModel) {
             when (rolActual) {
                 "Vecino/a" -> SeccionVecino(viewModel, listaAlertas)
                 "Directiva" -> SeccionDirectiva(viewModel, listaAlertas)
-                "Encargado" -> SeccionEncargado(viewModel, listaFallas)
+                "Encargado" -> SeccionEncargado(viewModel, listaFallas, listaAlertas)
             }
         }
     }
@@ -239,9 +246,9 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                     if (location != null) {
                         latitudGps = location.latitude
                         longitudGps = location.longitude
-                        ubicacionTexto = "GPS Real: ${String.format(Locale.getDefault(), "%.4f", location.latitude)}, ${String.format(Locale.getDefault(), "%.4f", location.longitude)}"
+                        ubicacionTexto = "Población Zaror, Cerrillos (GPS Real: ${String.format(Locale.getDefault(), "%.4f", location.latitude)}, ${String.format(Locale.getDefault(), "%.4f", location.longitude)})"
                         viewModel.limpiarErrores()
-                        Toast.makeText(context, "¡Ubicación GPS real obtenida!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "¡Ubicación GPS real obtenida con éxito!", Toast.LENGTH_SHORT).show()
                     } else {
                         latitudGps = -33.5042
                         longitudGps = -70.7185
@@ -264,7 +271,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            // Mapa Vectorial GPS de Alta Precisión (100% Garantizado de verse y funcionar offline)
+            // Mapa Vectorial GPS de Alta Precisión (Con interacción y scroll automático al formulario)
             VisorGoogleMapsZaror(
                 alertas = alertas,
                 gpsActivo = latitudGps != null,
@@ -360,24 +367,38 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Tipos de Incidente
-                    Row(
+                    // Tipos de Incidente (Grilla 2x2 para evitar deformaciones)
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        listOf("Robo / Asalto", "Incendio", "Médica", "Sospecha").forEach { tipo ->
-                            val seleccionado = (tipoSeleccionado == tipo)
-                            FilterChip(
-                                selected = seleccionado,
-                                onClick = { tipoSeleccionado = tipo },
-                                label = {
-                                    Text(
-                                        text = tipo,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                }
-                            )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            listOf("Robo / Asalto", "Incendio").forEach { tipo ->
+                                val seleccionado = (tipoSeleccionado == tipo)
+                                FilterChip(
+                                    selected = seleccionado,
+                                    onClick = { tipoSeleccionado = tipo },
+                                    label = { Text(tipo, fontSize = 11.sp, fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium) },
+                                    modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            listOf("Médica", "Sospecha").forEach { tipo ->
+                                val seleccionado = (tipoSeleccionado == tipo)
+                                FilterChip(
+                                    selected = seleccionado,
+                                    onClick = { tipoSeleccionado = tipo },
+                                    label = { Text(tipo, fontSize = 11.sp, fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium) },
+                                    modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
+                                )
+                            }
                         }
                     }
 
@@ -433,7 +454,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Botones de Recursos Nativos (Cámara + GPS Real)
+                    // Botones de Recursos Nativos (Cámara + GPS)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -464,7 +485,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
                                             if (location != null) {
                                                 latitudGps = location.latitude
                                                 longitudGps = location.longitude
-                                                ubicacionTexto = "GPS Real: ${String.format(Locale.getDefault(), "%.4f", location.latitude)}, ${String.format(Locale.getDefault(), "%.4f", location.longitude)}"
+                                                ubicacionTexto = "Población Zaror, Cerrillos (GPS Real: ${String.format(Locale.getDefault(), "%.4f", location.latitude)}, ${String.format(Locale.getDefault(), "%.4f", location.longitude)})"
                                                 viewModel.limpiarErrores()
                                                 Toast.makeText(context, "¡GPS real obtenido con éxito!", Toast.LENGTH_SHORT).show()
                                             } else {
@@ -541,7 +562,7 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Botones de Llamada Directa a Emergencias (Carabineros 133, Ambulancia 131, Bomberos 132)
+                    // Botones de Llamada Directa a Emergencias (133, 131, 132)
                     Text("Llamado directo a Servicios de Emergencia:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
@@ -604,12 +625,14 @@ fun SeccionVecino(viewModel: AlertaViewModel, alertas: List<Alerta>) {
         }
 
         items(alertas) { alerta ->
-            TarjetaAlerta(alerta = alerta)
+            TarjetaAlerta(alerta = alerta, onCambiarEstado = { id, nuevoEstado ->
+                viewModel.cambiarEstadoAlerta(id, nuevoEstado)
+            })
         }
     }
 }
 
-// Visor de Mapa Vectorial GPS de Alta Precisión Interactivo (Tocar el mapa rellena y redirige al formulario)
+// Visor de Google Maps Interactivo
 @Composable
 fun VisorGoogleMapsZaror(
     alertas: List<Alerta>,
@@ -618,63 +641,48 @@ fun VisorGoogleMapsZaror(
     lngActual: Double,
     onUbicacionSeleccionada: (String) -> Unit
 ) {
+    val zarorLatLng = LatLng(-33.5042, -70.7185)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(zarorLatLng, 15f)
+    }
+
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(190.dp)
+            .height(200.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFE8F5E9))
-                .clickable {
-                    // Tocar cualquier parte del mapa fija la sede social y redirige al formulario
-                    onUbicacionSeleccionada("Los Jazmines #425, Sede Social Zaror (Lat: -33.5042, Lng: -70.7185)")
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                onMapClick = { latLng ->
+                    onUbicacionSeleccionada("Población Zaror, Cerrillos (Lat: ${String.format(Locale.getDefault(), "%.4f", latLng.latitude)}, Lng: ${String.format(Locale.getDefault(), "%.4f", latLng.longitude)})")
                 }
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
-
-                for (i in 1..5) {
-                    drawLine(
-                        color = Color.LightGray.copy(alpha = 0.6f),
-                        start = Offset(w * (i / 6f), 0f),
-                        end = Offset(w * (i / 6f), h),
-                        strokeWidth = 8f
-                    )
-                }
-                for (i in 1..4) {
-                    drawLine(
-                        color = Color.LightGray.copy(alpha = 0.6f),
-                        start = Offset(0f, h * (i / 5f)),
-                        end = Offset(w, h * (i / 5f)),
-                        strokeWidth = 8f
-                    )
-                }
-
-                drawRect(Color.White, Offset(0f, h * 0.44f), Size(w, h * 0.12f))
-                
-                // Sede Social
-                drawCircle(color = Color(0xFF1976D2), radius = 14f, center = Offset(w * 0.5f, h * 0.5f))
-                drawCircle(color = Color.White, radius = 6f, center = Offset(w * 0.5f, h * 0.5f))
+            ) {
+                Marker(
+                    state = MarkerState(position = zarorLatLng),
+                    title = "Sede Social - Población Zaror",
+                    snippet = "Los Jazmines #425, Cerrillos"
+                )
 
                 if (gpsActivo) {
-                    val gpsX = w * 0.45f
-                    val gpsY = h * 0.40f
-                    drawCircle(color = Color(0xFF00C853).copy(alpha = 0.3f), radius = 28f, center = Offset(gpsX, gpsY))
-                    drawCircle(color = Color(0xFF00C853), radius = 12f, center = Offset(gpsX, gpsY))
-                    drawCircle(color = Color.White, radius = 5f, center = Offset(gpsX, gpsY))
+                    Marker(
+                        state = MarkerState(position = LatLng(latActual, lngActual)),
+                        title = "Tu Ubicación GPS Exacta",
+                        snippet = "Lat: ${String.format(Locale.getDefault(), "%.4f", latActual)}, Lng: ${String.format(Locale.getDefault(), "%.4f", lngActual)}"
+                    )
                 }
 
-                alertas.filter { it.estado == "ACTIVA" }.forEachIndexed { index, _ ->
-                    val posX = w * (0.2f + (index * 0.28f) % 0.7f)
-                    val posY = h * (0.25f + (index * 0.25f) % 0.5f)
-                    drawCircle(color = Color.Red.copy(alpha = 0.35f), radius = 26f, center = Offset(posX, posY))
-                    drawCircle(color = Color.Red, radius = 14f, center = Offset(posX, posY))
-                    drawCircle(color = Color.White, radius = 5f, center = Offset(posX, posY))
+                alertas.filter { it.estado == "ACTIVA" }.forEachIndexed { index, alerta ->
+                    val latOffset = -33.5042 + (index * 0.0012)
+                    val lngOffset = -70.7185 + (index * 0.0012)
+                    Marker(
+                        state = MarkerState(position = LatLng(latOffset, lngOffset)),
+                        title = "Alerta: ${alerta.tipo}",
+                        snippet = alerta.ubicacion
+                    )
                 }
             }
 
@@ -682,7 +690,7 @@ fun VisorGoogleMapsZaror(
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.TopStart)
-                    .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
                     .padding(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 Text(
@@ -692,17 +700,16 @@ fun VisorGoogleMapsZaror(
                     color = Color(0xFF1A237E)
                 )
                 Text(
-                    text = "Lat: -33.5042° S, Lng: -70.7185° W",
+                    text = "Google Maps • Población Zaror",
                     fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2E7D32)
+                    color = Color.DarkGray
                 )
             }
         }
     }
 }
 
-// Vista de la Directiva (Con enlace cruzado al Encargado)
+// Vista de la Directiva
 @Composable
 fun SeccionDirectiva(viewModel: AlertaViewModel, alertas: List<Alerta>) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -716,15 +723,15 @@ fun SeccionDirectiva(viewModel: AlertaViewModel, alertas: List<Alerta>) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Panel de la Directiva Zaror (Toca aquí para ver Mantención)",
+                        text = "Panel de la Directiva Zaror (Toca para ver Mantención)",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Total de incidentes: ${alertas.size}", fontSize = 13.sp)
+                    Text(text = "Total de incidentes reportados: ${alertas.size}", fontSize = 13.sp)
                     Text(
-                        text = "Alertas activas: ${alertas.count { it.estado == "ACTIVA" }}",
+                        text = "Alertas activas en monitoreo: ${alertas.count { it.estado == "ACTIVA" }}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error
@@ -735,42 +742,104 @@ fun SeccionDirectiva(viewModel: AlertaViewModel, alertas: List<Alerta>) {
 
         item {
             Text(
-                text = "Historial Completo de Incidentes:",
+                text = "Historial de Incidentes Creados desde 0:",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
         }
 
-        items(alertas) { alerta ->
-            TarjetaAlerta(alerta = alerta)
+        if (alertas.isEmpty()) {
+            item {
+                Text(text = "Aún no hay alertas emitidas. Crea una desde la vista de Vecino/a.", fontSize = 13.sp, color = Color.Gray)
+            }
+        } else {
+            items(alertas) { alerta ->
+                TarjetaAlerta(alerta = alerta, onCambiarEstado = { id, nuevoEstado ->
+                    viewModel.cambiarEstadoAlerta(id, nuevoEstado)
+                })
+            }
         }
     }
 }
 
-// Vista del Encargado (Con enlace cruzado a Directiva al tocar fichas de componentes)
+// Vista del Encargado (Con Switch interactivo que se activa con incidencias y botón en tarjeta)
 @Composable
-fun SeccionEncargado(viewModel: AlertaViewModel, fallas: List<FallaSistema>) {
+fun SeccionEncargado(viewModel: AlertaViewModel, fallas: List<FallaSistema>, alertas: List<Alerta>) {
+    val hayEmergenciasActivas = alertas.any { it.estado == "ACTIVA" }
+    var atendiendoEmergencia by remember { mutableStateOf(false) }
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             ElevatedCard(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.cambiarRol("Directiva") }
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Panel del Encargado (Mantención)",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = if (atendiendoEmergencia) "🚨 Estado: En camino a asistir incidencia" else "🟢 Estado: Disponible en central",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (atendiendoEmergencia) MaterialTheme.colorScheme.error else Color(0xFF2E7D32)
+                            )
+                        }
+                        Switch(
+                            checked = atendiendoEmergencia || hayEmergenciasActivas,
+                            onCheckedChange = { atendiendoEmergencia = it }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Mantenimiento del Sistema de Alarmas",
+                        text = if (hayEmergenciasActivas) "🚨 ¡ATENCIÓN: Botón activado! Hay emergencias en curso." else "✅ Sistema de alarmas operativo.",
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = "Toca cualquier componente para ir al panel de la Directiva.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        color = if (hayEmergenciasActivas) MaterialTheme.colorScheme.error else Color(0xFF2E7D32)
                     )
                 }
             }
+        }
+
+        item {
+            Text(
+                text = "Historial de Incidencias en Curso:",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
+        }
+
+        if (alertas.isEmpty()) {
+            item {
+                Text(text = "No hay incidencias reportadas (Iniciado desde 0).", fontSize = 13.sp, color = Color.Gray)
+            }
+        } else {
+            items(alertas) { alerta ->
+                TarjetaAlerta(alerta = alerta, onCambiarEstado = { id, nuevoEstado ->
+                    viewModel.cambiarEstadoAlerta(id, nuevoEstado)
+                })
+            }
+        }
+
+        item {
+            Text(
+                text = "Estado de Componentes y Sirenas:",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
 
         items(fallas) { falla ->
@@ -781,7 +850,7 @@ fun SeccionEncargado(viewModel: AlertaViewModel, fallas: List<FallaSistema>) {
                     .clickable { viewModel.cambiarRol("Directiva") }
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "Componente: ${falla.componente} (Toca para ver Directiva)", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                    Text(text = "Componente: ${falla.componente}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
                     Text(text = "Falla: ${falla.descripcion}", fontSize = 13.sp, color = Color.DarkGray)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "Estado: ${falla.estado}", fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -791,15 +860,15 @@ fun SeccionEncargado(viewModel: AlertaViewModel, fallas: List<FallaSistema>) {
     }
 }
 
-// Tarjeta Individual de Alerta
+// Tarjeta Individual de Alerta (Con botón de acción de estado abajo acorde al tamaño)
 @Composable
-fun TarjetaAlerta(alerta: Alerta) {
+fun TarjetaAlerta(alerta: Alerta, onCambiarEstado: ((Int, String) -> Unit)? = null) {
     var expandido by remember { mutableStateOf(false) }
 
     val colorEstado by animateColorAsState(
         targetValue = when (alerta.estado) {
             "ACTIVA" -> MaterialTheme.colorScheme.error
-            "EN ATENCIÓN" -> Color(0xFFFF9800)
+            "EN PROCESO" -> Color(0xFFFF9800)
             else -> Color(0xFF2E7D32)
         },
         animationSpec = tween(500),
@@ -865,6 +934,33 @@ fun TarjetaAlerta(alerta: Alerta) {
                         .clip(RoundedCornerShape(8.dp))
                         .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
                 )
+            }
+
+            // Botón de acción abajo en la tarjeta (Acorde al tamaño)
+            if (alerta.estado == "ACTIVA" && onCambiarEstado != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { onCambiarEstado(alerta.id, "EN PROCESO") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("🚨 En camino a asistir / En Proceso", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            } else if (alerta.estado == "EN PROCESO" && onCambiarEstado != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { onCambiarEstado(alerta.id, "RESUELTA") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("✅ Marcar como Resuelta / Cerrada", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
 
             Spacer(modifier = Modifier.height(6.dp))
